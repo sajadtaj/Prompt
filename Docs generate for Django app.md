@@ -529,6 +529,114 @@ cd /path/to/monitoring_module
 - ابتدا مستند اراسل شده را عمیق و چند لایه تحلیل کن 
 - در هر پاسخ فقط یکی از مستندهای خواست هشده را بده و با تایید من شروع کن به تولید مستند بعدی
 
+# قوانین ترسیم دیاگرام Mermaid برای معماری اپ جنگو
+
+## قوانین سینتکسی (بدون خطا)
+- در متن لینک‌ها (متن بین `|...|`) از هیچ یک از کاراکترهای زیر استفاده نکن:
+  - `(` یا `)` (پرانتز)
+  - `/` (اسلش)
+  - `_` (آندرلاین)
+  - `#` (هش)
+  - `?` (علامت سوال)
+  - `=` (مساوی)
+  - `<` یا `>` (بزرگتر/کوچکتر)
+- در عوض، از فاصله یا خط تیره استفاده کن: مثلاً `POST form` نه `POST(form)`
+- نام گره‌ها (مثلاً `AdminView["text"]`) می‌توانند پرانتز و اسلش داشته باشند، فقط متن لینک‌ها نمی‌توانند.
+
+## قوانین ساختاری (بدون شلوغی)
+- هر نمودار حداکثر ۱۲-۱۵ گره داشته باشد
+- اگر معماری پیچیده است، به جای یک نمودار، ۲ یا ۳ نمودار تخصصی بساز:
+  - نمودار ۱: نمای کلی (ورودی‌ها + لایه‌ها)
+  - نمودار ۲: جزئیات سرویس‌ها و کش
+  - نمودار ۳: جریان داده و قالب‌ها
+- از `subgraph` فقط برای گروه‌بندی‌های سطح بالا استفاده کن
+- نام `subgraph` باید ساده و بدون فاصله یا کاراکتر خاص باشد (مثلاً `Services` نه `Service Layer`)
+
+## قوانین خوانایی
+- از شکل‌های متفاوت استفاده کن:
+  - `[("متن")]` برای دیتابیس‌ها و منابع داده
+  - `["متن"]` برای کامپوننت‌ها و سرویس‌ها
+  - `("متن")` برای بازیگران (ادمین، کاربر)
+- از آیکون‌های یونیکد ساده (مثل 👤, 📡, 📁) در متن گره‌ها استفاده کن
+- لینک‌ها را مختصر و مفید بنویس (حداکثر ۳ کلمه)
+
+## مثال درست (✅) و غلط (❌)
+
+❌ غلط:
+``
+Admin -->|POST(form)| AdminView
+AdminView -->|get_data()| Service
+Service -->|SELECT/UPDATE| DB
+``
+
+✅ درست:
+``
+Admin -->|POST form| AdminView
+AdminView -->|get data| Service
+Service -->|select update| DB
+``
+
+## الگوی آماده (برای اپ‌های جنگو)
+
+نمودار ۱ (نمای کلی):
+``mermaid
+graph TD
+    Admin[("👤 ادمین")]
+    API[("📡 API Client")]
+
+    Admin -->|GET POST| ViewAdmin["admin view"]
+    API -->|GET POST| ViewAPI["api view"]
+
+    ViewAdmin -->|calls| ServiceLayer["service layer"]
+    ViewAPI -->|calls| ServiceLayer
+
+    ServiceLayer -->|queries| Database[("database")]
+    ServiceLayer -.->|cache| CacheService["cache service"]
+
+    ViewAdmin -->|renders| Template["template"]
+``
+
+نمودار ۲ (جزئیات سرویس‌ها):
+``mermaid
+graph TD
+    subgraph Services ["service layer"]
+        Base["base service"]
+        Svc1["service one"]
+        Svc2["service two"]
+    end
+
+    Cache["cache service"]
+    Signals["signals"]
+
+    Svc1 -.->|inherits| Base
+    Svc2 -.->|inherits| Base
+
+    Svc1 -->|refresh| Cache
+    Svc2 -->|refresh| Cache
+
+    Signals -->|trigger| Cache
+``
+
+نمودار ۳ (قالب‌ها):
+``mermaid
+graph TD
+    View["admin view"]
+    Template["dashboard template"]
+    Tab1["tab one"]
+    Tab2["tab two"]
+
+    View -->|renders| Template
+    Template -->|includes| Tab1
+    Template -->|includes| Tab2
+``
+
+## نکات نهایی
+- قبل از ارسال نمودار، از نظر خطاهای سینتکسی بررسی کن
+- اگر نمودار به هر دلیل خطا داد، آن را به ۲ نمودار کوچکتر تقسیم کن
+- در صورت نیاز به نمایش وابستگی‌های پیچیده، از جدول شرح اجزاء (Module Dictionary) در کنار نمودار استفاده کن
+``
+
+
 # شروع کن.
 ```
 
@@ -555,4 +663,3 @@ cd /path/to/monitoring_module
 3. همان پرامپت بالا را به همراه فایل به API هوش مصنوعی ارسال کند
 4. خروجی را به صورت `ARCHITECTURE.md` و `CODE_REVIEW.md` ذخیره کند
 
-آیا می‌خواهی آن اسکریپت را هم برایت بنویسم؟
