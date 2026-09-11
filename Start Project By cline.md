@@ -133,6 +133,8 @@ CHANGES_SUMMARY_FOR_EACH_CHANGE: [concise description]
 BUILD_STATUS: [PASS | FAIL]
 ARCHITECTURE_JSON_UPDATED: [YES | NO]
 ALL_DEPENDENCY_MODIFY?[YES/NO].Why?
+USE_SKILLS: [no/yes]. why?
+USE_TOOLS : [semgrep/graphify/ruff/uv/rg/...].why?
 NEXT_PHASE_RECOMMENDATION: [next task]
 ```
 
